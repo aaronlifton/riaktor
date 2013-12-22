@@ -1,0 +1,18 @@
+<h1 id="">Riaktor</h1>
+<div id="flash">{{.Message}}</div>
+<form action="/new" method="POST">
+  <div>
+    <textarea name="body" rows="20" cols="80">
+{
+  "type": "Post",
+  "data": {
+    "title": "Hello World!",
+    "content": "Lorem ipsum dolor...",
+    "author": "Aaron Lifton",
+    "id": 1
+  }
+}
+    </textarea>
+  </div>
+  <div><input type="submit" value="Save"></div>
+</form>
