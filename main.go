@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/tpjg/goriakpbc"
-  "github.com/bitly/go-simplejson"
+  _ "github.com/bitly/go-simplejson"
 	"net/http"
   "html/template"
   "encoding/json"
@@ -97,19 +97,27 @@ type Flash struct {
   Message string
 }
 
+type test_struct struct {
+    Test string
+}
+
 func newHandler(w http.ResponseWriter, r *http.Request) {
-  r.ParseForm()
-  log.Println(r.Form)
-  t, _ := template.ParseFiles("templates/index.html")
-  f := &Flash{Message: "Object saved."}
+  // r.ParseForm()
+  // log.Println(r.Form)
+  // log.Println(r.Body)
+  // json.Unmarshal([]byte(r.Form["body"][0]), &obj)
+  // fmt.Println(obj)
+  
   decoder := json.NewDecoder(r.Body)
-  // var obj Obj
   var obj map[string]interface{}
   err := decoder.Decode(&obj)
   if err != nil {
-    fmt.Println("Error saving object.")
     log.Fatal(err)
   }
+  log.Println(obj)
+
+  t, _ := template.ParseFiles("templates/index.html")
+  f := &Flash{Message: "Object saved."}
   t.Execute(w, f)
 }
 
