@@ -7,6 +7,7 @@ import (
 	"net/http"
   "html/template"
   "encoding/json"
+  _ "io/ioutil"
   "log"
 	_ "os"
 )
@@ -26,13 +27,16 @@ type Soda struct {
 }
 
 type Obj struct {
-  Type string `riak:"type"`
-  Data map[string]string `riak:"data"`
+  Type string `riak:"type",json:"type"`
+  Key string `json:"key"`
+  Data json.RawMessage `riak:"data",json:"data"`
   riak.Model
 }
 
 func (o *Obj) Id() string {
-  return o.Data["id"]
+  var obj map[string]interface{}
+  json.Unmarshal(o.Data, obj)
+  return obj["id"].(string)
 }
 
 func RiakTransaction(f func(*riak.Client)) {
@@ -83,7 +87,7 @@ func clone(name string, newName string, client riak.Client) {
 func insertTestObject(bucket *riak.Bucket) {
 	obj := bucket.New("testobj")
 	obj.ContentType = "application/json"
-	obj.Data = []byte("{'name': 'Bob'}")
+	obj.Data = []byte(`{'name': 'Bob'}`)
 	obj.Store()
 }
 
@@ -108,17 +112,44 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
   // json.Unmarshal([]byte(r.Form["body"][0]), &obj)
   // fmt.Println(obj)
   
-  decoder := json.NewDecoder(r.Body)
-  var obj map[string]interface{}
-  err := decoder.Decode(&obj)
-  if err != nil {
-    log.Fatal(err)
-  }
-  log.Println(obj)
+  r.ParseForm()
+  log.Println(r.Form)  
 
+  // body, err := ioutil.ReadAll(r.Body)
+  message := "Object failed to save."
+
+  var obj Obj
+  obj.Type = r.Form["type"][0]
+  obj.Key = r.Form["key"][0]
+  obj.Data, _ = json.Marshal(r.Form["data"][0])
+  log.Println(obj)
+    // 
+    // x, err := json.Marshal(r.Form)
+    // json.Unmarshal(x, &obj)
+    // 
+    // if err != nil {
+    //   panic(err.Error())
+    // }
+    // 
+  fmt.Printf("Results: %+v\n", obj)
+  // log.Println(x)
+  
+  // save(obj)
+  message = "Object saved."
+  
   t, _ := template.ParseFiles("templates/index.html")
-  f := &Flash{Message: "Object saved."}
+  f := &Flash{Message: message}
   t.Execute(w, f)
+}
+
+func save(obj Obj) {
+  RiakTransaction(func(client *riak.Client) {
+    bucket, _ := client.Bucket(fmt.Sprintf("%s",obj.Type))
+    newObj := bucket.New(fmt.Sprintf("%s",obj.Key))
+    newObj.ContentType = "application/json"
+    newObj.Data = obj.Data
+    newObj.Store()
+  })
 }
 
 func main() {
@@ -128,7 +159,7 @@ func main() {
     // insertTestObject(bucket)
   	obj := bucket.New("testobj")
   	obj.ContentType = "application/json"
-  	obj.Data = []byte("{'name': 'Bob'}")
+  	obj.Data = []byte(`{'name': 'Bob'}`)
   	obj.Store()
 
     var soda *Soda

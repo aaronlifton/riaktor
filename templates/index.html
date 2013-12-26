@@ -3,15 +3,17 @@
 <div id="flash">{{.Message}}</div>
 <form id="jsonForm" action="/new" method="POST" enctype="application/json">
   <div>
-    <textarea id="jsonBody" name="body" rows="20" cols="80">
+    <label for="type">Type</label><br>
+    <input value="Soda" name="type" type="text" /><br>
+    <label for="key">Key</label><br>
+    <input value="lemon-lime-sprite-soda" name="key" type="text" /><br>
+    <label for="data">Data (json)</label><br>
+    <textarea id="jsonBody" name="data" rows="20" cols="80">
 {
-  "type": "Post",
-  "data": {
-    "title": "Hello World!",
-    "content": "Lorem ipsum dolor...",
-    "author": "Aaron Lifton",
-    "id": 1
-  }
+  "sugar_free": "false",
+  "flavor": "lemon-lime",
+  "brand": "Sprite",
+  "id": 1
 }
     </textarea>
   </div>
